@@ -6,6 +6,7 @@ import os
 import sys
 import threading
 import time
+import random
 from pathlib import Path
 
 class EdgewareApp:
@@ -51,6 +52,13 @@ class EdgewareApp:
             window = tk.Toplevel()
             window.geometry("600x600")
             window.title("edgeware")
+            
+            # Random position
+            screen_width = window.winfo_screenwidth()
+            screen_height = window.winfo_screenheight()
+            x = random.randint(0, max(0, screen_width - 600))
+            y = random.randint(0, max(0, screen_height - 600))
+            window.geometry(f"600x600+{x}+{y}")
             
             # Load and display image
             img = Image.open(image_path)
