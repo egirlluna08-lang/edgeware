@@ -15,6 +15,10 @@ class EdgewareApp:
         self.image_files = []
         self.current_index = 0
         self.running = True
+        self.code_input = ""
+        self.unlock_code = "6767"
+        self.root = None
+        self.unlock_window = None
         
         # Find images folder
         script_dir = Path(__file__).parent.absolute()
@@ -69,8 +73,15 @@ class EdgewareApp:
             label.image = photo  # Keep a reference
             label.pack(fill=tk.BOTH, expand=True)
             
-            # Track window
-            window.protocol("WM_DELETE_WINDOW", lambda: self.close_window(window))
+            # Block closing - show unlock dialog instead
+            def block_close():
+                self.show_unlock_dialog()
+            
+            window.protocol("WM_DELETE_WINDOW", block_close)
+            
+            # Listen for any key press to show unlock dialog
+            window.bind('<Key>', lambda e: self.show_unlock_dialog())
+            
             self.windows.append(window)
             
             return window
@@ -116,23 +127,82 @@ class EdgewareApp:
                 print(f"Loop error: {e}")
                 time.sleep(1)
     
+    def show_unlock_dialog(self, event=None):
+        """Show unlock dialog that requires code"""
+        # Don't show multiple dialogs
+        if self.unlock_window:
+            try:
+                if self.unlock_window.winfo_exists():
+                    self.unlock_window.focus()
+                    return
+            except:
+                pass
+        
+        unlock_win = tk.Toplevel()
+        self.unlock_window = unlock_win
+        unlock_win.geometry("300x150")
+        unlock_win.title("LOCKED")
+        unlock_win.configure(bg="black")
+        unlock_win.resizable(False, False)
+        
+        # Make window stay on top
+        unlock_win.attributes('-topmost', True)
+        
+        label = tk.Label(unlock_win, text="UNLOCK CODE:", fg="#ff1493", bg="black", font=("Arial", 12, "bold"))
+        label.pack(pady=10)
+        
+        code_display = tk.Label(unlock_win, text="", fg="#00ff00", bg="black", font=("Courier", 24, "bold"))
+        code_display.pack(pady=5)
+        
+        def check_code(event=None):
+            if self.code_input == self.unlock_code:
+                self.code_input = ""
+                code_display.config(text="")
+                unlock_win.destroy()
+                self.unlock_window = None
+                self.running = False
+                for win in self.windows:
+                    try:
+                        win.destroy()
+                    except:
+                        pass
+                if self.root:
+                    self.root.destroy()
+            elif len(self.code_input) >= len(self.unlock_code):
+                self.code_input = ""
+                code_display.config(text="WRONG")
+                unlock_win.after(500, lambda: code_display.config(text=""))
+        
+        def on_key(event):
+            if event.char.isdigit():
+                self.code_input += event.char
+                code_display.config(text="●" * len(self.code_input))
+                if len(self.code_input) == len(self.unlock_code):
+                    check_code()
+        
+        unlock_win.bind('<Key>', on_key)
+        unlock_win.focus()
+        
+        return unlock_win
+    
     def run(self):
         """Keep the app running"""
         # Create invisible root window to keep app alive
         root = tk.Tk()
+        self.root = root
         root.withdraw()
         root.geometry("1x1+0+0")
         
+        # Block normal window closing by showing unlock dialog
         def on_closing():
-            self.running = False
-            root.destroy()
+            self.show_unlock_dialog()
         
         root.protocol("WM_DELETE_WINDOW", on_closing)
         
         try:
             root.mainloop()
         except KeyboardInterrupt:
-            self.running = False
+            self.show_unlock_dialog()
 
 if __name__ == "__main__":
     app = EdgewareApp()
