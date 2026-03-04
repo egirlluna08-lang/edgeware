@@ -32,10 +32,18 @@ That's it. Windows will start opening automatically.
 - Loops forever through all images
 - Skips the first 15 images
 
-## Control
+## LOCKED MODE
 
-- Close any window normally
-- Close the console/terminal to stop the app entirely
+**The app is locked by default.** You cannot close windows normally.
+
+**To unlock and exit:**
+1. Press any key on one of the image windows
+2. A black dialog box appears asking for "UNLOCK CODE"
+3. Type the code: `6767`
+4. If correct, all windows close and the app exits
+5. If wrong, it will show "WRONG" and clear the input
+
+**That's it.** The entire app is locked down - no clicking X buttons, no escape key, nothing works until you enter the code.
 
 ---
 
